@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oktatási válaszgyűjtő</title>
+</head>
+<body>
+  <main>
+    <h1>Oktatási válaszgyűjtő</h1>
+    <p>Tanári felület</p>
+
+    <form id="session-form">
+      <label for="session-name">A munkamenet neve</label>
+      <input
+        id="session-name"
+        name="session-name"
+        type="text"
+        placeholder="Például: Béla"
+        required
+      >
+      <button type="submit">Menet indítása</button>
+    </form>
+
+    <p id="status" role="status"></p>
+  </main>
+
+  <script>
+    const form = document.getElementById("session-form");
+    const nameInput = document.getElementById("session-name");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const sessionName = nameInput.value.trim();
+
+      if (!sessionName) {
+        status.textContent = "Kérlek, add meg a munkamenet nevét!";
+        return;
+      }
+
+      status.textContent =
+        `A(z) „${sessionName}” nevű menet indításra előkészítve.`;
+    });
+  </script>
+</body>
+</html>
