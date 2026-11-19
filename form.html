@@ -148,6 +148,7 @@
 
 <body>
   <main>
+
     <h1>Oktatási válaszgyűjtő</h1>
     <p class="subtitle">Résztvevői felület</p>
 
@@ -197,9 +198,15 @@
     <div class="footer">
       Oktatási válaszgyűjtő
     </div>
+
   </main>
 
   <script>
+
+    // ==========================================
+    // 1. ELEMEK
+    // ==========================================
+
     const sessionIdElement =
       document.getElementById("session-id");
 
@@ -215,17 +222,34 @@
     const participantIdElement =
       document.getElementById("participant-id");
 
-    // Munkamenet azonosítójának kiolvasása
+
+    // ==========================================
+    // 2. POWER AUTOMATE KAPCSOLAT
+    // ==========================================
+
+    const JOIN_FLOW_URL =
+      "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/bc632f8941994a4d8a36e132608ad525/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eV21QLRekGuBjrdH0KPjDHf-SvXqfTTK7rL_uxKemNk";
+
+
+    // ==========================================
+    // 3. MUNKAMENET AZONOSÍTÓ KIOLVASÁSA
+    // ==========================================
+
     const params = new URLSearchParams(
       window.location.search
     );
 
     const sessionId = params.get("sessionId");
 
-    // Kezdeti ellenőrzés
+
+    // ==========================================
+    // 4. KEZDETI ELLENŐRZÉS
+    // ==========================================
+
     if (!sessionId || !sessionId.trim()) {
 
-      sessionIdElement.textContent = "Nincs megadva";
+      sessionIdElement.textContent =
+        "Nincs megadva";
 
       statusElement.textContent =
         "Érvénytelen hivatkozás. " +
@@ -244,37 +268,154 @@
       statusElement.classList.add("success");
 
       joinButton.hidden = false;
+
     }
 
-    // Csatlakozás – IDEIGLENES TESZTMÓD
-    joinButton.addEventListener("click", () => {
 
-      if (!sessionId) return;
+    // ==========================================
+    // 5. RÉSZTVEVŐ CSATLAKOZTATÁSA
+    // ==========================================
+
+    joinButton.addEventListener("click", async () => {
+
+      if (!sessionId || joinButton.disabled) {
+        return;
+      }
+
+      if (
+        !JOIN_FLOW_URL ||
+        JOIN_FLOW_URL.includes("IDE_MASOLD")
+      ) {
+        statusElement.textContent =
+          "A Power Automate kapcsolat URL-je nincs beállítva.";
+
+        statusElement.classList.add("error");
+        return;
+      }
 
       joinButton.disabled = true;
 
-      // Tesztazonosító generálása
-      const testNumber =
-        Math.floor(Math.random() * 9000) + 1000;
-
-      const testId = "TESZT-" + testNumber;
-
-      // Azonosító megjelenítése
-      participantIdElement.textContent = testId;
-
-      participantSection.hidden = false;
-
-      // Sikeres állapot
-      statusElement.textContent =
-        "A tesztcsatlakozás sikeres! " +
-        "A résztvevői azonosítót kiosztottuk.";
-
       statusElement.classList.remove("error");
-      statusElement.classList.add("success");
+      statusElement.classList.remove("success");
 
-      joinButton.textContent = "Sikeresen csatlakoztál";
+      statusElement.textContent =
+        "Csatlakozás folyamatban...";
+
+      try {
+
+        // Egyedi résztvevői azonosító
+        const participantId = crypto.randomUUID();
+
+
+        // HTTP POST kérés
+        const response = await fetch(JOIN_FLOW_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            SessionId: sessionId,
+
+            ParticipantId: participantId
+
+          })
+
+        });
+
+
+        // Válasz feldolgozása
+        const responseText = await response.text();
+
+        let result;
+
+        try {
+
+          result = JSON.parse(responseText);
+
+        } catch {
+
+          throw new Error(
+            "A Power Automate nem JSON választ küldött."
+          );
+
+        }
+
+
+        // HTTP státusz ellenőrzése
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP-hiba: ${response.status}`
+          );
+
+        }
+
+
+        // Power Automate válasz ellenőrzése
+        if (
+          result.success !== true ||
+          result.participantNumber === undefined ||
+          result.participantNumber === null
+        ) {
+
+          throw new Error(
+            result.message ||
+            "Nem érkezett vissza résztvevői azonosító."
+          );
+
+        }
+
+
+        // ======================================
+        // 6. SIKERES CSATLAKOZÁS
+        // ======================================
+
+        participantIdElement.textContent =
+          result.participantNumber;
+
+        participantSection.hidden = false;
+
+        statusElement.textContent =
+          "Sikeres csatlakozás! " +
+          "A résztvevői azonosítót kiosztottuk.";
+
+        statusElement.classList.add("success");
+
+        joinButton.textContent =
+          "Sikeresen csatlakoztál";
+
+
+      } catch (error) {
+
+
+        // ======================================
+        // 7. HIBA KEZELÉSE
+        // ======================================
+
+        console.error(
+          "Csatlakozási hiba:",
+          error
+        );
+
+        statusElement.textContent =
+          "A csatlakozás nem sikerült: " +
+          error.message;
+
+        statusElement.classList.remove("success");
+
+        statusElement.classList.add("error");
+
+        joinButton.disabled = false;
+
+      }
 
     });
+
   </script>
+
 </body>
 </html>

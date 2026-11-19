@@ -136,7 +136,12 @@
       <h3>Résztvevői hivatkozás</h3>
 
       <div class="link-container">
-        <a id="form-link" href="#" target="_blank" rel="noopener noreferrer">
+        <a
+          id="form-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Form megnyitása
         </a>
       </div>
@@ -167,22 +172,42 @@
     const copyButton = document.getElementById("copy-button");
     const copyStatus = document.getElementById("copy-status");
 
-    // Power Automate URL – a végleges beállítás később történik.
-    const FLOW_URL = "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/4f070c0cbcef4f7c9cf60db3ca947fc5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H5y0K4xy46XtHGPM8gdGuGEFhuei-MVyaMBVpU_U4Zg";
 
-    // Résztvevői oldal GitHub Pages URL-je.
+    // ==========================================
+    // 1. MUNKAMENET LÉTREHOZÁSA – POWER AUTOMATE
+    // ==========================================
+
+    const FLOW_URL =
+      "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/4f070c0cbcef4f7c9cf60db3ca947fc5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H5y0K4xy46XtHGPM8gdGuGEFhuei-MVyaMBVpU_U4Zg";
+
+
+    // ==========================================
+    // 2. RÉSZTVEVŐI OLDAL URL-JE
+    // ==========================================
+
+    // Automatikusan az aktuális könyvtárból
+    // tölti be a form.html oldalt.
+
     const FORM_URL =
-      "https://fejlesztok.github.io/oktatasi-valaszgyujto/form.html";
+      new URL("./form.html", window.location.href).href;
+
 
     let currentFormUrl = "";
 
+
+    // ==========================================
+    // 3. MUNKAMENET INDÍTÁSA
+    // ==========================================
+
     form.addEventListener("submit", async (event) => {
+
       event.preventDefault();
 
       const sessionName = nameInput.value.trim();
 
       if (!sessionName) {
-        status.textContent = "Kérlek, add meg a munkamenet nevét!";
+        status.textContent =
+          "Kérlek, add meg a munkamenet nevét!";
         return;
       }
 
@@ -195,38 +220,72 @@
       submitButton.disabled = true;
       resultSection.hidden = true;
       copyStatus.textContent = "";
-      status.textContent = "Munkamenet létrehozása folyamatban...";
+
+      status.textContent =
+        "Munkamenet létrehozása folyamatban...";
+
 
       try {
+
         const response = await fetch(FLOW_URL, {
+
           method: "POST",
+
           headers: {
             "Content-Type": "application/json"
           },
+
           body: JSON.stringify({
             sessionName: sessionName
           })
+
         });
+
 
         const result = await response.json();
 
-        if (!response.ok) {
-          throw new Error(`HTTP-hiba: ${response.status}`);
-        }
 
-        if (result.success !== true || !result.sessionId) {
+        if (!response.ok) {
           throw new Error(
-            result.message || "Nem érkezett vissza munkamenet-azonosító."
+            `HTTP-hiba: ${response.status}`
           );
         }
 
-        // Munkamenet adatainak megjelenítése
-        resultName.textContent = result.sessionName || sessionName;
-        resultId.textContent = result.sessionId;
 
-        // Résztvevői URL előállítása
+        if (
+          result.success !== true ||
+          !result.sessionId
+        ) {
+
+          throw new Error(
+            result.message ||
+            "Nem érkezett vissza munkamenet-azonosító."
+          );
+
+        }
+
+
+        // ======================================
+        // 4. MUNKAMENET ADATAINAK MEGJELENÍTÉSE
+        // ======================================
+
+        resultName.textContent =
+          result.sessionName || sessionName;
+
+        resultId.textContent =
+          result.sessionId;
+
+
+        // ======================================
+        // 5. RÉSZTVEVŐI HIVATKOZÁS ELŐÁLLÍTÁSA
+        // ======================================
+
         const url = new URL(FORM_URL);
-        url.searchParams.set("sessionId", result.sessionId);
+
+        url.searchParams.set(
+          "sessionId",
+          result.sessionId
+        );
 
         currentFormUrl = url.href;
 
@@ -235,32 +294,58 @@
 
         resultSection.hidden = false;
 
-        status.textContent = "A munkamenet sikeresen létrejött!";
+        status.textContent =
+          "A munkamenet sikeresen létrejött!";
+
 
       } catch (error) {
-        console.error("Munkamenet létrehozási hiba:", error);
+
+        console.error(
+          "Munkamenet létrehozási hiba:",
+          error
+        );
 
         status.textContent =
-          "Nem sikerült befejezni a kérést. Ellenőrizd a " +
-          "Power Automate futási előzményeit és a böngésző konzolját.";
+          "Nem sikerült befejezni a kérést. " +
+          "Ellenőrizd a Power Automate futási előzményeit " +
+          "és a böngésző konzolját.";
 
       } finally {
+
         submitButton.disabled = false;
+
       }
+
     });
 
-    // Form hivatkozás másolása
+
+    // ==========================================
+    // 6. RÉSZTVEVŐI HIVATKOZÁS MÁSOLÁSA
+    // ==========================================
+
     copyButton.addEventListener("click", async () => {
+
       if (!currentFormUrl) return;
 
       try {
-        await navigator.clipboard.writeText(currentFormUrl);
-        copyStatus.textContent = "A hivatkozás sikeresen másolva!";
-      } catch (error) {
+
+        await navigator.clipboard.writeText(
+          currentFormUrl
+        );
+
         copyStatus.textContent =
-          "A másolás nem sikerült. Jelöld ki és másold ki a hivatkozást.";
+          "A hivatkozás sikeresen másolva!";
+
+      } catch (error) {
+
+        copyStatus.textContent =
+          "A másolás nem sikerült. " +
+          "Jelöld ki és másold ki a hivatkozást.";
+
       }
+
     });
+
   </script>
 </body>
 </html>
