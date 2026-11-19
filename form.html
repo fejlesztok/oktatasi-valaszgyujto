@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Oktatási válaszgyűjtő – Résztvevői felület</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    main {
+      width: 100%;
+      max-width: 520px;
+      padding: 32px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    h2 {
+      font-size: 19px;
+      margin: 0 0 16px;
+    }
+
+    .subtitle {
+      margin: 0 0 28px;
+      color: #666;
+    }
+
+    .session-box,
+    .participant-box {
+      padding: 18px;
+      margin-bottom: 20px;
+      background: #f1f7f7;
+      border-left: 4px solid #00a3a3;
+      border-radius: 5px;
+    }
+
+    .session-label,
+    .participant-label {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .session-value,
+    .participant-value {
+      margin: 0;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .participant-box {
+      background: #eaf7ee;
+      border-left-color: #299c50;
+    }
+
+    .participant-value {
+      font-size: 28px;
+      color: #236b38;
+    }
+
+    .status {
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      background: #f1f2f4;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .status.error {
+      background: #fff0f0;
+      color: #a32626;
+    }
+
+    .status.success {
+      background: #eaf7ee;
+      color: #236b38;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 5px;
+      background: #0078d4;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    button:hover:not(:disabled) {
+      background: #006cbe;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 16px;
+      }
+
+      main {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Oktatási válaszgyűjtő</h1>
+    <p class="subtitle">Résztvevői felület</p>
+
+    <!-- Munkamenet adatai -->
+    <section class="session-box">
+      <p class="session-label">Munkamenet azonosító</p>
+      <p class="session-value" id="session-id">
+        Betöltés...
+      </p>
+    </section>
+
+    <!-- Állapotüzenet -->
+    <div
+      id="status"
+      class="status"
+      role="status"
+      aria-live="polite"
+    >
+      A munkamenet adatainak ellenőrzése...
+    </div>
+
+    <!-- Csatlakozás -->
+    <button
+      id="join-button"
+      type="button"
+      hidden
+    >
+      Csatlakozás a munkamenethez
+    </button>
+
+    <!-- Résztvevői azonosító -->
+    <section
+      id="participant-section"
+      class="participant-box"
+      hidden
+    >
+      <p class="participant-label">
+        A te résztvevői azonosítód
+      </p>
+
+      <p
+        class="participant-value"
+        id="participant-id"
+      ></p>
+    </section>
+
+    <div class="footer">
+      Oktatási válaszgyűjtő
+    </div>
+  </main>
+
+  <script>
+    const sessionIdElement =
+      document.getElementById("session-id");
+
+    const statusElement =
+      document.getElementById("status");
+
+    const joinButton =
+      document.getElementById("join-button");
+
+    const participantSection =
+      document.getElementById("participant-section");
+
+    const participantIdElement =
+      document.getElementById("participant-id");
+
+    // Munkamenet azonosítójának kiolvasása
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const sessionId = params.get("sessionId");
+
+    // Kezdeti ellenőrzés
+    if (!sessionId || !sessionId.trim()) {
+
+      sessionIdElement.textContent = "Nincs megadva";
+
+      statusElement.textContent =
+        "Érvénytelen hivatkozás. " +
+        "A munkamenet azonosítója hiányzik.";
+
+      statusElement.classList.add("error");
+
+    } else {
+
+      sessionIdElement.textContent = sessionId;
+
+      statusElement.textContent =
+        "A munkamenet azonosítóját sikeresen beolvastuk. " +
+        "A csatlakozáshoz nyomd meg az alábbi gombot.";
+
+      statusElement.classList.add("success");
+
+      joinButton.hidden = false;
+    }
+
+    // Csatlakozás – IDEIGLENES TESZTMÓD
+    joinButton.addEventListener("click", () => {
+
+      if (!sessionId) return;
+
+      joinButton.disabled = true;
+
+      // Tesztazonosító generálása
+      const testNumber =
+        Math.floor(Math.random() * 9000) + 1000;
+
+      const testId = "TESZT-" + testNumber;
+
+      // Azonosító megjelenítése
+      participantIdElement.textContent = testId;
+
+      participantSection.hidden = false;
+
+      // Sikeres állapot
+      statusElement.textContent =
+        "A tesztcsatlakozás sikeres! " +
+        "A résztvevői azonosítót kiosztottuk.";
+
+      statusElement.classList.remove("error");
+      statusElement.classList.add("success");
+
+      joinButton.textContent = "Sikeresen csatlakoztál";
+
+    });
+  </script>
+</body>
+</html>

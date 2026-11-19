@@ -1,17 +1,107 @@
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oktatási válaszgyűjtő</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      color: #222;
+    }
+
+    main {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 32px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 5px;
+      background: #0078d4;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      background: #f1f7f7;
+      border-left: 4px solid #00a3a3;
+      border-radius: 5px;
+    }
+
+    .result[hidden] {
+      display: none;
+    }
+
+    .link-container {
+      margin-top: 16px;
+      overflow-wrap: anywhere;
+      padding: 12px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .copy-button {
+      margin-top: 12px;
+      background: #008577;
+    }
+
+    #status {
+      line-height: 1.5;
+    }
+  </style>
 </head>
+
 <body>
   <main>
     <h1>Oktatási válaszgyűjtő</h1>
     <p>Tanári felület</p>
 
     <form id="session-form">
-      <label for="session-name">A munkamenet neve</label>
+
+      <label for="session-name">
+        A munkamenet neve
+      </label>
+
       <input
         id="session-name"
         name="session-name"
@@ -19,18 +109,74 @@
         placeholder="Például: Béla"
         required
       >
-      <button type="submit">Menet indítása</button>
+
+      <button id="submit-button" type="submit">
+        Menet indítása
+      </button>
+
     </form>
 
-    <p id="status" role="status"></p>
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <!-- Sikeres munkamenet után megjelenő eredmény -->
+    <section id="result" class="result" hidden>
+
+      <h2>Munkamenet létrejött</h2>
+
+      <p>
+        <strong>Munkamenet neve:</strong>
+        <strong id="result-name"></strong>
+      </p>
+
+      <p>
+        <strong>Azonosító:</strong>
+        <span id="result-id"></span>
+      </p>
+
+      <h3>Résztvevői hivatkozás</h3>
+
+      <div class="link-container">
+        <a id="form-link" href="#" target="_blank" rel="noopener noreferrer">
+          Form megnyitása
+        </a>
+      </div>
+
+      <button
+        type="button"
+        id="copy-button"
+        class="copy-button"
+      >
+        Hivatkozás másolása
+      </button>
+
+      <p id="copy-status" aria-live="polite"></p>
+
+    </section>
   </main>
 
   <script>
     const form = document.getElementById("session-form");
     const nameInput = document.getElementById("session-name");
     const status = document.getElementById("status");
+    const submitButton = document.getElementById("submit-button");
 
-    form.addEventListener("submit", (event) => {
+    const resultSection = document.getElementById("result");
+    const resultName = document.getElementById("result-name");
+    const resultId = document.getElementById("result-id");
+    const formLink = document.getElementById("form-link");
+    const copyButton = document.getElementById("copy-button");
+    const copyStatus = document.getElementById("copy-status");
+
+    // Power Automate URL – a végleges beállítás később történik.
+    const FLOW_URL = "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/4f070c0cbcef4f7c9cf60db3ca947fc5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H5y0K4xy46XtHGPM8gdGuGEFhuei-MVyaMBVpU_U4Zg";
+
+    // Résztvevői oldal GitHub Pages URL-je.
+    const FORM_URL =
+      "https://fejlesztok.github.io/oktatasi-valaszgyujto/form.html";
+
+    let currentFormUrl = "";
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const sessionName = nameInput.value.trim();
@@ -40,8 +186,80 @@
         return;
       }
 
-      status.textContent =
-        `A(z) „${sessionName}” nevű menet indításra előkészítve.`;
+      if (!FLOW_URL) {
+        status.textContent =
+          "A Power Automate adatkapcsolat még nincs beállítva.";
+        return;
+      }
+
+      submitButton.disabled = true;
+      resultSection.hidden = true;
+      copyStatus.textContent = "";
+      status.textContent = "Munkamenet létrehozása folyamatban...";
+
+      try {
+        const response = await fetch(FLOW_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            sessionName: sessionName
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(`HTTP-hiba: ${response.status}`);
+        }
+
+        if (result.success !== true || !result.sessionId) {
+          throw new Error(
+            result.message || "Nem érkezett vissza munkamenet-azonosító."
+          );
+        }
+
+        // Munkamenet adatainak megjelenítése
+        resultName.textContent = result.sessionName || sessionName;
+        resultId.textContent = result.sessionId;
+
+        // Résztvevői URL előállítása
+        const url = new URL(FORM_URL);
+        url.searchParams.set("sessionId", result.sessionId);
+
+        currentFormUrl = url.href;
+
+        formLink.href = currentFormUrl;
+        formLink.textContent = currentFormUrl;
+
+        resultSection.hidden = false;
+
+        status.textContent = "A munkamenet sikeresen létrejött!";
+
+      } catch (error) {
+        console.error("Munkamenet létrehozási hiba:", error);
+
+        status.textContent =
+          "Nem sikerült befejezni a kérést. Ellenőrizd a " +
+          "Power Automate futási előzményeit és a böngésző konzolját.";
+
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    // Form hivatkozás másolása
+    copyButton.addEventListener("click", async () => {
+      if (!currentFormUrl) return;
+
+      try {
+        await navigator.clipboard.writeText(currentFormUrl);
+        copyStatus.textContent = "A hivatkozás sikeresen másolva!";
+      } catch (error) {
+        copyStatus.textContent =
+          "A másolás nem sikerült. Jelöld ki és másold ki a hivatkozást.";
+      }
     });
   </script>
 </body>
