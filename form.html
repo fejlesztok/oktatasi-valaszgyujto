@@ -125,6 +125,81 @@
       display: none !important;
     }
 
+    /* VÁLASZTÁSI FELÜLET */
+
+    .answer-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #eee;
+    }
+
+    .answer-description {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .answer-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .answer-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 14px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      cursor: pointer;
+      background: #fff;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .answer-option:hover {
+      border-color: #0078d4;
+      background: #f2f8fd;
+    }
+
+    .answer-option:has(input:checked) {
+      border: 2px solid #0078d4;
+      background: #eaf4fc;
+    }
+
+    .answer-option input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      flex-shrink: 0;
+      accent-color: #0078d4;
+    }
+
+    .answer-option span {
+      font-size: 15px;
+    }
+
+    #submit-answer {
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    #answer-status {
+      margin-top: 16px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    #answer-status.success {
+      color: #236b38;
+    }
+
+    #answer-status.error {
+      color: #a32626;
+    }
+
     .footer {
       margin-top: 28px;
       padding-top: 16px;
@@ -141,6 +216,10 @@
 
       main {
         padding: 24px;
+      }
+
+      .answer-list {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -195,6 +274,90 @@
       ></p>
     </section>
 
+    <!-- VÁLASZTÁSI FELÜLET -->
+    <section
+      id="answer-section"
+      class="answer-section"
+      hidden
+    >
+
+      <h2>Válaszd ki a válaszodat!</h2>
+
+      <p class="answer-description">
+        Az alábbi lehetőségek közül egyet választhatsz.
+        A választásodat a beküldés előtt módosíthatod.
+      </p>
+
+      <div class="answer-list">
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="1">
+          <span>1. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="2">
+          <span>2. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="3">
+          <span>3. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="4">
+          <span>4. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="5">
+          <span>5. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="6">
+          <span>6. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="7">
+          <span>7. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="8">
+          <span>8. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="9">
+          <span>9. lehetőség</span>
+        </label>
+
+        <label class="answer-option">
+          <input type="radio" name="answer" value="10">
+          <span>10. lehetőség</span>
+        </label>
+
+      </div>
+
+      <button
+        id="submit-answer"
+        type="button"
+        disabled
+      >
+        Beküldés
+      </button>
+
+      <p
+        id="answer-status"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+    </section>
+
     <div class="footer">
       Oktatási válaszgyűjtő
     </div>
@@ -222,6 +385,18 @@
     const participantIdElement =
       document.getElementById("participant-id");
 
+    const answerSection =
+      document.getElementById("answer-section");
+
+    const submitAnswerButton =
+      document.getElementById("submit-answer");
+
+    const answerStatus =
+      document.getElementById("answer-status");
+
+    const answerOptions =
+      document.querySelectorAll('input[name="answer"]');
+
 
     // ==========================================
     // 2. POWER AUTOMATE KAPCSOLAT
@@ -240,6 +415,10 @@
     );
 
     const sessionId = params.get("sessionId");
+
+
+    // A résztvevő azonosítójának megőrzése
+    let currentParticipantId = null;
 
 
     // ==========================================
@@ -305,6 +484,9 @@
 
         // Egyedi résztvevői azonosító
         const participantId = crypto.randomUUID();
+
+        // Azonosító megőrzése a későbbi válaszküldéshez
+        currentParticipantId = participantId;
 
 
         // HTTP POST kérés
@@ -379,6 +561,9 @@
 
         participantSection.hidden = false;
 
+        // Választási felület megjelenítése
+        answerSection.hidden = false;
+
         statusElement.textContent =
           "Sikeres csatlakozás! " +
           "A résztvevői azonosítót kiosztottuk.";
@@ -388,9 +573,7 @@
         joinButton.textContent =
           "Sikeresen csatlakoztál";
 
-
       } catch (error) {
-
 
         // ======================================
         // 7. HIBA KEZELÉSE
@@ -400,6 +583,8 @@
           "Csatlakozási hiba:",
           error
         );
+
+        currentParticipantId = null;
 
         statusElement.textContent =
           "A csatlakozás nem sikerült: " +
@@ -412,6 +597,70 @@
         joinButton.disabled = false;
 
       }
+
+    });
+
+
+    // ==========================================
+    // 8. VÁLASZTÁS KEZELÉSE
+    // ==========================================
+
+    answerOptions.forEach((option) => {
+
+      option.addEventListener("change", () => {
+
+        if (option.checked) {
+
+          // Beküldés aktiválása
+          submitAnswerButton.disabled = false;
+
+          // Korábbi üzenet törlése
+          answerStatus.textContent = "";
+
+          answerStatus.classList.remove("success");
+          answerStatus.classList.remove("error");
+
+        }
+
+      });
+
+    });
+
+
+    // ==========================================
+    // 9. BEKÜLDÉS – JELENLEG CSAK FELÜLETI FUNKCIÓ
+    // ==========================================
+
+    submitAnswerButton.addEventListener("click", () => {
+
+      const selectedAnswer =
+        document.querySelector('input[name="answer"]:checked');
+
+      if (!selectedAnswer) {
+        return;
+      }
+
+      if (!currentParticipantId) {
+
+        answerStatus.textContent =
+          "Érvénytelen résztvevői azonosító.";
+
+        answerStatus.classList.add("error");
+
+        return;
+
+      }
+
+      // Egyelőre nincs szerveroldali mentés.
+      // A tényleges beküldési folyamat külön fejlesztési feladat.
+
+      answerStatus.textContent =
+        "A választásod: " +
+        selectedAnswer.value +
+        ". A tényleges válaszbeküldés még nincs bekötve.";
+
+      answerStatus.classList.remove("error");
+      answerStatus.classList.remove("success");
 
     });
 
