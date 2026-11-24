@@ -38,10 +38,22 @@
     }
 
     input {
+      width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 16px;
+    }
+
+    input:focus {
+      outline: 2px solid #0078d4;
+      outline-offset: 1px;
+    }
+
+    .field-description {
+      margin: -5px 0 5px;
+      color: #666;
+      font-size: 13px;
     }
 
     button {
@@ -88,11 +100,13 @@
     #status {
       line-height: 1.5;
     }
+
   </style>
 </head>
 
 <body>
   <main>
+
     <h1>Oktatási válaszgyűjtő</h1>
     <p>Tanári felület</p>
 
@@ -110,6 +124,25 @@
         required
       >
 
+      <label for="max-participants">
+        Résztvevők maximális száma
+      </label>
+
+      <input
+        id="max-participants"
+        name="max-participants"
+        type="number"
+        min="1"
+        max="40"
+        step="1"
+        value="40"
+        required
+      >
+
+      <p class="field-description">
+        Minimum 1, maximum 40 fő.
+      </p>
+
       <button id="submit-button" type="submit">
         Menet indítása
       </button>
@@ -119,6 +152,7 @@
     <p id="status" role="status" aria-live="polite"></p>
 
     <!-- Sikeres munkamenet után megjelenő eredmény -->
+
     <section id="result" class="result" hidden>
 
       <h2>Munkamenet létrejött</h2>
@@ -131,6 +165,11 @@
       <p>
         <strong>Azonosító:</strong>
         <span id="result-id"></span>
+      </p>
+
+      <p>
+        <strong>Maximális résztvevőszám:</strong>
+        <span id="result-limit"></span> fő
       </p>
 
       <h3>Résztvevői hivatkozás</h3>
@@ -157,24 +196,53 @@
       <p id="copy-status" aria-live="polite"></p>
 
     </section>
+
   </main>
 
   <script>
-    const form = document.getElementById("session-form");
-    const nameInput = document.getElementById("session-name");
-    const status = document.getElementById("status");
-    const submitButton = document.getElementById("submit-button");
 
-    const resultSection = document.getElementById("result");
-    const resultName = document.getElementById("result-name");
-    const resultId = document.getElementById("result-id");
-    const formLink = document.getElementById("form-link");
-    const copyButton = document.getElementById("copy-button");
-    const copyStatus = document.getElementById("copy-status");
+    // ==========================================
+    // 1. HTML ELEMEK
+    // ==========================================
+
+    const form = document.getElementById("session-form");
+
+    const nameInput =
+      document.getElementById("session-name");
+
+    const limitInput =
+      document.getElementById("max-participants");
+
+    const status =
+      document.getElementById("status");
+
+    const submitButton =
+      document.getElementById("submit-button");
+
+    const resultSection =
+      document.getElementById("result");
+
+    const resultName =
+      document.getElementById("result-name");
+
+    const resultId =
+      document.getElementById("result-id");
+
+    const resultLimit =
+      document.getElementById("result-limit");
+
+    const formLink =
+      document.getElementById("form-link");
+
+    const copyButton =
+      document.getElementById("copy-button");
+
+    const copyStatus =
+      document.getElementById("copy-status");
 
 
     // ==========================================
-    // 1. MUNKAMENET LÉTREHOZÁSA – POWER AUTOMATE
+    // 2. POWER AUTOMATE KAPCSOLAT
     // ==========================================
 
     const FLOW_URL =
@@ -182,11 +250,8 @@
 
 
     // ==========================================
-    // 2. RÉSZTVEVŐI OLDAL URL-JE
+    // 3. RÉSZTVEVŐI OLDAL URL-JE
     // ==========================================
-
-    // Automatikusan az aktuális könyvtárból
-    // tölti be a form.html oldalt.
 
     const FORM_URL =
       new URL("./form.html", window.location.href).href;
@@ -196,7 +261,33 @@
 
 
     // ==========================================
-    // 3. MUNKAMENET INDÍTÁSA
+    // 4. LÉTSZÁM ELLENŐRZÉSE
+    // ==========================================
+
+    function validateParticipantLimit() {
+
+      const maxParticipants = limitInput.valueAsNumber;
+
+      if (
+        !Number.isInteger(maxParticipants) ||
+        maxParticipants < 1 ||
+        maxParticipants > 40
+      ) {
+
+        status.textContent =
+          "A résztvevők száma 1 és 40 közötti egész szám lehet.";
+
+        limitInput.focus();
+
+        return null;
+      }
+
+      return maxParticipants;
+    }
+
+
+    // ==========================================
+    // 5. MUNKAMENET LÉTREHOZÁSA
     // ==========================================
 
     form.addEventListener("submit", async (event) => {
@@ -206,19 +297,39 @@
       const sessionName = nameInput.value.trim();
 
       if (!sessionName) {
+
         status.textContent =
           "Kérlek, add meg a munkamenet nevét!";
+
+        nameInput.focus();
+
         return;
       }
+
+
+      // Létszám ellenőrzése
+
+      const maxParticipants =
+        validateParticipantLimit();
+
+      if (maxParticipants === null) {
+        return;
+      }
+
 
       if (!FLOW_URL) {
+
         status.textContent =
           "A Power Automate adatkapcsolat még nincs beállítva.";
+
         return;
       }
 
+
       submitButton.disabled = true;
+
       resultSection.hidden = true;
+
       copyStatus.textContent = "";
 
       status.textContent =
@@ -236,7 +347,11 @@
           },
 
           body: JSON.stringify({
-            sessionName: sessionName
+
+            sessionName: sessionName,
+
+            maxParticipants: maxParticipants
+
           })
 
         });
@@ -246,9 +361,11 @@
 
 
         if (!response.ok) {
+
           throw new Error(
             `HTTP-hiba: ${response.status}`
           );
+
         }
 
 
@@ -266,7 +383,7 @@
 
 
         // ======================================
-        // 4. MUNKAMENET ADATAINAK MEGJELENÍTÉSE
+        // 6. MUNKAMENET ADATAINAK MEGJELENÍTÉSE
         // ======================================
 
         resultName.textContent =
@@ -275,9 +392,12 @@
         resultId.textContent =
           result.sessionId;
 
+        resultLimit.textContent =
+          maxParticipants;
+
 
         // ======================================
-        // 5. RÉSZTVEVŐI HIVATKOZÁS ELŐÁLLÍTÁSA
+        // 7. RÉSZTVEVŐI HIVATKOZÁS ELŐÁLLÍTÁSA
         // ======================================
 
         const url = new URL(FORM_URL);
@@ -290,7 +410,9 @@
         currentFormUrl = url.href;
 
         formLink.href = currentFormUrl;
+
         formLink.textContent = currentFormUrl;
+
 
         resultSection.hidden = false;
 
@@ -320,7 +442,7 @@
 
 
     // ==========================================
-    // 6. RÉSZTVEVŐI HIVATKOZÁS MÁSOLÁSA
+    // 8. RÉSZTVEVŐI HIVATKOZÁS MÁSOLÁSA
     // ==========================================
 
     copyButton.addEventListener("click", async () => {
@@ -347,5 +469,6 @@
     });
 
   </script>
+
 </body>
 </html>
