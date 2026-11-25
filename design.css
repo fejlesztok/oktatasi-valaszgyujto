@@ -1,0 +1,262 @@
+
+/* ==========================================
+   1. ALAPBEÁLLÍTÁSOK
+========================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 24px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: Arial, sans-serif;
+  color: #111;
+
+  background-image: url("./background_main_screen.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+
+/* ==========================================
+   2. KÖZPONTI FEHÉR PANEL
+========================================== */
+
+main {
+  width: 100%;
+  max-width: 772px;
+  padding: 54px 53px 48px;
+
+  background: #fff;
+  border-radius: 30px;
+
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+
+
+/* ==========================================
+   3. ŰRLAP ÉS MEZŐK
+========================================== */
+
+form {
+  display: grid;
+  gap: 0;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-group + .field-group {
+  margin-top: 44px;
+}
+
+label {
+  margin-bottom: 26px;
+
+  text-align: center;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  height: 56px;
+  padding: 10px 18px;
+
+  border: 1px solid #222;
+  border-radius: 14px;
+
+  background: #fff;
+  color: #222;
+
+  font-family: inherit;
+  font-size: 22px;
+  text-align: center;
+}
+
+input::placeholder {
+  color: #888;
+  font-style: italic;
+  opacity: 1;
+}
+
+input:focus {
+  outline: 2px solid #b991e9;
+  outline-offset: 3px;
+}
+
+
+/* ==========================================
+   4. MENET INDÍTÁSA GOMB
+========================================== */
+
+#submit-button {
+  width: calc(100% - 8px);
+  min-height: 55px;
+  margin: 85px auto 0;
+  padding: 12px 20px;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: #b991e9;
+  color: #fff;
+
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+#submit-button:hover:not(:disabled) {
+  background: #a77cdd;
+}
+
+#submit-button:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+   5. ÁLLAPOTÜZENET
+========================================== */
+
+#status {
+  margin: 20px 0 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+
+/* ==========================================
+   6. LÉTREHOZOTT MUNKAMENET ADATAI
+========================================== */
+
+.result {
+  margin-top: 28px;
+  padding: 24px;
+
+  background: #f7f2fc;
+  border-radius: 14px;
+  border: 1px solid #e3d5f5;
+
+  overflow-wrap: anywhere;
+}
+
+.result[hidden] {
+  display: none;
+}
+
+.result h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.link-container {
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+  padding: 12px;
+
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.link-container a {
+  color: #7850a9;
+}
+
+.copy-button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #8f68c1;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#copy-status {
+  line-height: 1.5;
+}
+
+
+/* ==========================================
+   7. MOBIL MEGJELENÉS
+========================================== */
+
+@media (max-width: 700px) {
+
+  body {
+    padding: 18px;
+    background-attachment: scroll;
+  }
+
+  main {
+    padding: 38px 26px;
+    border-radius: 22px;
+  }
+
+  label {
+    font-size: 24px;
+    margin-bottom: 18px;
+  }
+
+  input {
+    height: 54px;
+    font-size: 18px;
+  }
+
+  .field-group + .field-group {
+    margin-top: 34px;
+  }
+
+  #submit-button {
+    margin-top: 55px;
+    font-size: 19px;
+  }
+}
+
+
+/* ==========================================
+   8. KISEBB MOBIL KÉPERNYŐK
+========================================== */
+
+@media (max-width: 400px) {
+
+  main {
+    padding: 30px 20px;
+  }
+
+  label {
+    font-size: 21px;
+  }
+
+  #submit-button {
+    margin-top: 42px;
+  }
+}
