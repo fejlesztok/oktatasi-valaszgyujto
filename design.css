@@ -29,12 +29,12 @@ body {
 
 
 /* ==========================================
-   2. KÖZPONTI FEHÉR PANEL
+   2. KÖZPONTI PANEL
 ========================================== */
 
 main {
   width: 100%;
-  max-width: 772px;
+  max-width: 840px;
   padding: 54px 53px 48px;
 
   background: #fff;
@@ -45,7 +45,7 @@ main {
 
 
 /* ==========================================
-   3. ŰRLAP ÉS MEZŐK
+   3. MUNKAMENET LÉTREHOZÓ ŰRLAP
 ========================================== */
 
 form {
@@ -149,16 +149,28 @@ button:disabled {
 
 
 /* ==========================================
-   6. LÉTREHOZOTT MUNKAMENET ADATAI
+   6. EREDMÉNYKÉPERNYŐ
 ========================================== */
 
-.result {
-  margin-top: 28px;
-  padding: 24px;
+/* Az eredeti űrlap eltüntetése,
+   amikor a munkamenet már létrejött */
 
-  background: #f7f2fc;
-  border-radius: 14px;
-  border: 1px solid #e3d5f5;
+main:has(#result:not([hidden])) #session-form {
+  display: none;
+}
+
+main:has(#result:not([hidden])) #status {
+  display: none;
+}
+
+.result {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  background: #fff;
+  border: none;
+  border-radius: 0;
 
   overflow-wrap: anywhere;
 }
@@ -167,46 +179,187 @@ button:disabled {
   display: none;
 }
 
+
+/* ==========================================
+   7. EREDMÉNYKÉPERNYŐ CÍME
+========================================== */
+
 .result h2 {
-  margin-top: 0;
+  margin: 14px 0 82px;
+
   text-align: center;
-}
-
-.link-container {
-  margin-top: 16px;
-  overflow-wrap: anywhere;
-  padding: 12px;
-
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.link-container a {
-  color: #7850a9;
-}
-
-.copy-button {
-  width: 100%;
-  margin-top: 12px;
-  padding: 13px 18px;
-
-  border: 0;
-  border-radius: 10px;
-
-  background: #8f68c1;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#copy-status {
-  line-height: 1.5;
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 
 /* ==========================================
-   7. MOBIL MEGJELENÉS
+   8. QR-KÓD ÉS MUNKAMENET ADATAI
+========================================== */
+
+.session-dashboard {
+  display: grid;
+  grid-template-columns: 266px minmax(0, 1fr);
+  align-items: center;
+  gap: 17px;
+}
+
+
+/* QR-kód helye */
+
+.qr-placeholder {
+  width: 266px;
+  height: 263px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid #222;
+  border-radius: 24px;
+
+  background: #fff;
+}
+
+.qr-placeholder span {
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+}
+
+
+/* Jobb oldali információs terület */
+
+.session-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Munkamenet neve */
+
+.session-info h3 {
+  margin: 0 0 10px;
+  padding-left: 10px;
+
+  font-size: 23px;
+  line-height: 1.25;
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================
+   9. RÉSZTVEVŐI LÉTSZÁM
+========================================== */
+
+.participant-stats {
+  width: 100%;
+  min-height: 85px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  border: 1px solid #222;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.stat-box {
+  min-width: 0;
+  padding: 16px 10px 12px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-box + .stat-box {
+  border-left: 1px solid #222;
+}
+
+.stat-box strong {
+  font-size: 23px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.stat-box span {
+  margin-top: 2px;
+
+  font-size: 15px;
+  line-height: 1.2;
+  font-style: italic;
+}
+
+
+/* ==========================================
+   10. MUNKATERÜLET GOMB
+========================================== */
+
+.workspace-button {
+  width: 100%;
+  min-height: 55px;
+  margin-top: 57px;
+  padding: 12px 16px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: #b991e9;
+  color: #fff;
+
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.workspace-button:hover {
+  background: #a77cdd;
+}
+
+.workspace-button:active {
+  transform: scale(0.99);
+}
+
+
+/* ==========================================
+   11. RÉSZTVEVŐI OLDAL GOMB
+========================================== */
+
+.form-open-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 10px 16px;
+
+  border: 1px solid #b991e9;
+  border-radius: 12px;
+
+  background: #fff;
+  color: #7850a9;
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.form-open-button:hover {
+  background: #f7f2fc;
+}
+
+
+/* ==========================================
+   12. MOBIL MEGJELENÉS
 ========================================== */
 
 @media (max-width: 700px) {
@@ -239,11 +392,42 @@ button:disabled {
     margin-top: 55px;
     font-size: 19px;
   }
+
+  .result h2 {
+    margin: 0 0 35px;
+    font-size: 25px;
+  }
+
+  .session-dashboard {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .qr-placeholder {
+    width: min(100%, 266px);
+    height: 230px;
+    margin: 0 auto;
+  }
+
+  .session-info h3 {
+    padding-left: 0;
+    font-size: 21px;
+    text-align: center;
+  }
+
+  .workspace-button {
+    margin-top: 30px;
+    font-size: 18px;
+  }
+
+  .form-open-button {
+    font-size: 16px;
+  }
 }
 
 
 /* ==========================================
-   8. KISEBB MOBIL KÉPERNYŐK
+   13. KISEBB MOBIL KÉPERNYŐK
 ========================================== */
 
 @media (max-width: 400px) {
@@ -258,5 +442,25 @@ button:disabled {
 
   #submit-button {
     margin-top: 42px;
+  }
+
+  .result h2 {
+    font-size: 22px;
+  }
+
+  .participant-stats {
+    min-height: 76px;
+  }
+
+  .stat-box {
+    padding: 12px 7px;
+  }
+
+  .stat-box strong {
+    font-size: 20px;
+  }
+
+  .stat-box span {
+    font-size: 12px;
   }
 }

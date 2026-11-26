@@ -5,12 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oktatási válaszgyűjtő</title>
-
   <link rel="stylesheet" href="./design.css">
 </head>
 
 <body>
   <main>
+
+    <!-- MUNKAMENET LÉTREHOZÁSA -->
 
     <form id="session-form">
 
@@ -51,55 +52,79 @@
 
     </form>
 
+
+    <!-- ÁLLAPOTÜZENET -->
+
     <p id="status" role="status" aria-live="polite"></p>
 
-    <!-- Sikeres munkamenet után megjelenő eredmény -->
+
+    <!-- SIKERES MUNKAMENET UTÁNI KÉPERNYŐ -->
 
     <section id="result" class="result" hidden>
 
-      <h2>Munkamenet létrejött</h2>
+      <h2>Olvassátok be az alábbi QR kódot!</h2>
 
-      <p>
-        <strong>Munkamenet neve:</strong>
-        <strong id="result-name"></strong>
-      </p>
+      <div class="session-dashboard">
 
-      <p>
-        <strong>Azonosító:</strong>
-        <span id="result-id"></span>
-      </p>
+        <!-- QR-KÓD HELYE -->
 
-      <p>
-        <strong>Maximális résztvevőszám:</strong>
-        <span id="result-limit"></span> fő
-      </p>
+        <div class="qr-placeholder">
+          <span>QR-kód helye</span>
+        </div>
 
-      <h3>Résztvevői hivatkozás</h3>
 
-      <div class="link-container">
-        <a
-          id="form-link"
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Form megnyitása
-        </a>
+        <!-- MUNKAMENET ADATAI -->
+
+        <div class="session-info">
+
+          <h3 id="result-name"></h3>
+
+          <!-- RÉSZTVEVŐI LÉTSZÁM -->
+
+          <div class="participant-stats">
+
+            <div class="stat-box">
+              <strong id="joined-count">0</strong>
+              <span>csatlakozott résztvevő</span>
+            </div>
+
+            <div class="stat-box">
+              <strong id="remaining-count">0</strong>
+              <span>hátralévő hely</span>
+            </div>
+
+          </div>
+
+
+          <!-- MUNKATERÜLET GOMB -->
+
+          <button
+            type="button"
+            id="workspace-button"
+            class="workspace-button"
+          >
+            Belépés a munkaterületre
+          </button>
+
+
+          <!-- RÉSZTVEVŐI OLDAL MEGNYITÁSA -->
+
+          <button
+            type="button"
+            id="form-open-button"
+            class="form-open-button"
+          >
+            Résztvevői oldal megnyitása
+          </button>
+
+        </div>
+
       </div>
-
-      <button
-        type="button"
-        id="copy-button"
-        class="copy-button"
-      >
-        Hivatkozás másolása
-      </button>
-
-      <p id="copy-status" aria-live="polite"></p>
 
     </section>
 
   </main>
+
 
   <script>
 
@@ -107,7 +132,8 @@
     // 1. HTML ELEMEK
     // ==========================================
 
-    const form = document.getElementById("session-form");
+    const form =
+      document.getElementById("session-form");
 
     const nameInput =
       document.getElementById("session-name");
@@ -127,20 +153,17 @@
     const resultName =
       document.getElementById("result-name");
 
-    const resultId =
-      document.getElementById("result-id");
+    const joinedCount =
+      document.getElementById("joined-count");
 
-    const resultLimit =
-      document.getElementById("result-limit");
+    const remainingCount =
+      document.getElementById("remaining-count");
 
-    const formLink =
-      document.getElementById("form-link");
+    const workspaceButton =
+      document.getElementById("workspace-button");
 
-    const copyButton =
-      document.getElementById("copy-button");
-
-    const copyStatus =
-      document.getElementById("copy-status");
+    const formOpenButton =
+      document.getElementById("form-open-button");
 
 
     // ==========================================
@@ -231,7 +254,7 @@
 
       resultSection.hidden = true;
 
-      copyStatus.textContent = "";
+      currentFormUrl = "";
 
       status.textContent =
         "Munkamenet létrehozása folyamatban...";
@@ -290,10 +313,12 @@
         resultName.textContent =
           result.sessionName || sessionName;
 
-        resultId.textContent =
-          result.sessionId;
 
-        resultLimit.textContent =
+        // Kezdeti létszámadatok
+
+        joinedCount.textContent = "0";
+
+        remainingCount.textContent =
           maxParticipants;
 
 
@@ -310,16 +335,15 @@
 
         currentFormUrl = url.href;
 
-        formLink.href = currentFormUrl;
 
-        formLink.textContent = currentFormUrl;
-
+        // ======================================
+        // 8. EREDMÉNYKÉPERNYŐ MEGJELENÍTÉSE
+        // ======================================
 
         resultSection.hidden = false;
 
         status.textContent =
           "A munkamenet sikeresen létrejött!";
-
 
       } catch (error) {
 
@@ -343,29 +367,32 @@
 
 
     // ==========================================
-    // 8. RÉSZTVEVŐI HIVATKOZÁS MÁSOLÁSA
+    // 9. RÉSZTVEVŐI OLDAL MEGNYITÁSA
     // ==========================================
 
-    copyButton.addEventListener("click", async () => {
+    formOpenButton.addEventListener("click", () => {
 
-      if (!currentFormUrl) return;
-
-      try {
-
-        await navigator.clipboard.writeText(
-          currentFormUrl
-        );
-
-        copyStatus.textContent =
-          "A hivatkozás sikeresen másolva!";
-
-      } catch (error) {
-
-        copyStatus.textContent =
-          "A másolás nem sikerült. " +
-          "Jelöld ki és másold ki a hivatkozást.";
-
+      if (!currentFormUrl) {
+        return;
       }
+
+      window.open(
+        currentFormUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+    });
+
+
+    // ==========================================
+    // 10. MUNKATERÜLET MEGNYITÁSA
+    // ==========================================
+
+    workspaceButton.addEventListener("click", () => {
+
+      status.textContent =
+        "A munkaterület megnyitása a következő fejlesztési lépésben lesz elérhető.";
 
     });
 
