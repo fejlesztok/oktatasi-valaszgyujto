@@ -1,607 +1,339 @@
 
-
 <!DOCTYPE html>
-
 <html lang="hu">
-
 <head>
-
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <meta name="robots" content="noindex, nofollow">
-
   <title>Oktatási válaszgyűjtő – Résztvevői felület</title>
 
   <style>
-
     * {
-
       box-sizing: border-box;
-
     }
 
     body {
-
       margin: 0;
-
       padding: 24px;
-
       min-height: 100vh;
-
       font-family: Arial, sans-serif;
-
       background: #f5f6f8;
-
       color: #222;
-
       display: flex;
-
       justify-content: center;
-
       align-items: center;
-
     }
 
     main {
-
       width: 100%;
-
       max-width: 520px;
-
       padding: 32px;
-
       background: #fff;
-
       border-radius: 12px;
-
       box-shadow: 0 3px 16px rgba(0, 0, 0, 0.08);
-
     }
 
     h1 {
-
       margin: 0 0 8px;
-
       font-size: 26px;
-
     }
 
     h2 {
-
       font-size: 19px;
-
       margin: 0 0 16px;
-
     }
 
     .subtitle {
-
       margin: 0 0 28px;
-
       color: #666;
-
     }
 
     .session-box,
-
     .participant-box {
-
       padding: 18px;
-
       margin-bottom: 20px;
-
       background: #f1f7f7;
-
       border-left: 4px solid #00a3a3;
-
       border-radius: 5px;
-
     }
 
     .session-label,
-
     .participant-label {
-
       margin: 0 0 8px;
-
       font-size: 13px;
-
       color: #666;
-
     }
 
     .session-value,
-
     .participant-value {
-
       margin: 0;
-
       font-weight: bold;
-
       overflow-wrap: anywhere;
-
     }
 
     .participant-box {
-
       background: #eaf7ee;
-
       border-left-color: #299c50;
-
     }
 
     .participant-value {
-
       font-size: 28px;
-
       color: #236b38;
-
     }
 
     .status {
-
       padding: 16px;
-
       margin-bottom: 20px;
-
       border-radius: 6px;
-
       background: #f1f2f4;
-
       color: #444;
-
       line-height: 1.5;
-
     }
 
     .status.error {
-
       background: #fff0f0;
-
       color: #a32626;
-
     }
 
     .status.success {
-
       background: #eaf7ee;
-
       color: #236b38;
-
     }
 
     button {
-
       width: 100%;
-
       padding: 14px 18px;
-
       border: 0;
-
       border-radius: 5px;
-
       background: #0078d4;
-
       color: white;
-
       font-size: 16px;
-
       cursor: pointer;
-
       margin-bottom: 20px;
-
     }
 
     button:hover:not(:disabled) {
-
       background: #006cbe;
-
     }
 
     button:disabled {
-
       opacity: 0.5;
-
       cursor: not-allowed;
-
     }
 
     [hidden] {
-
       display: none !important;
-
     }
 
     /* VÁLASZTÁSI FELÜLET */
 
     .answer-section {
-
       margin-top: 28px;
-
       padding-top: 24px;
-
       border-top: 1px solid #eee;
-
     }
 
     .answer-description {
-
       color: #666;
-
       font-size: 14px;
-
       line-height: 1.5;
-
     }
 
     .answer-list {
-
       display: grid;
-
       grid-template-columns: 1fr 1fr;
-
       gap: 10px;
-
       margin: 20px 0;
-
     }
 
     .answer-option {
-
       display: flex;
-
       align-items: center;
-
       gap: 10px;
-
       min-height: 52px;
-
       padding: 14px;
-
       border: 1px solid #ccc;
-
       border-radius: 7px;
-
       cursor: pointer;
-
       background: #fff;
-
-      transition: *background* 0.2s, border-color 0.2s;
-
+      transition: background 0.2s, border-color 0.2s;
     }
 
     .answer-option:hover {
-
       border-color: #0078d4;
-
       background: #f2f8fd;
-
     }
 
     .answer-option:has(input:checked) {
-
       border: 2px solid #0078d4;
-
       background: #eaf4fc;
-
     }
 
     .answer-option input {
-
       width: 18px;
-
       height: 18px;
-
       margin: 0;
-
       flex-shrink: 0;
-
       accent-color: #0078d4;
-
     }
 
     .answer-option span {
-
       font-size: 15px;
-
     }
 
     #submit-answer {
-
       margin-top: 10px;
-
       margin-bottom: 0;
-
     }
 
     #answer-status {
-
       margin-top: 16px;
-
       line-height: 1.5;
-
       font-size: 14px;
-
     }
 
     #answer-status.success {
-
       color: #236b38;
-
     }
 
     #answer-status.error {
-
       color: #a32626;
-
     }
 
     .footer {
-
       margin-top: 28px;
-
       padding-top: 16px;
-
       border-top: 1px solid #eee;
-
       font-size: 12px;
-
       color: #888;
-
       text-align: center;
-
     }
 
     @media (max-width: 480px) {
-
       body {
-
         padding: 16px;
-
       }
 
       main {
-
         padding: 24px;
-
       }
 
       .answer-list {
-
         grid-template-columns: 1fr;
-
       }
-
     }
-
   </style>
-
 </head>
 
 <body>
-
   <main>
-
     <h1>Oktatási válaszgyűjtő</h1>
-
     <p class="subtitle">Résztvevői felület</p>
 
     <!-- Munkamenet adatai -->
-
     <section class="session-box">
-
       <p class="session-label">Munkamenet azonosító</p>
-
-      <p class="session-value" id="session-id">
-
-        Betöltés...
-
-      </p>
-
+      <p class="session-value" id="session-id">Betöltés...</p>
     </section>
 
     <!-- Állapotüzenet -->
-
     <div
-
       id="status"
-
       class="status"
-
       role="status"
-
       aria-live="polite"
-
     >
-
       A munkamenet adatainak ellenőrzése...
-
     </div>
 
     <!-- Csatlakozás -->
-
-    <button
-
-      id="join-button"
-
-      type="button"
-
-      hidden
-
-    >
-
+    <button id="join-button" type="button" hidden>
       Csatlakozás a munkamenethez
-
     </button>
 
     <!-- Résztvevői azonosító -->
-
-    <section
-
-      id="participant-section"
-
-      class="participant-box"
-
-      hidden
-
-    >
-
+    <section id="participant-section" class="participant-box" hidden>
       <p class="participant-label">
-
         A te résztvevői azonosítód
-
       </p>
-
-      <p
-
-        class="participant-value"
-
-        id="participant-id"
-
-      ></p>
-
+      <p class="participant-value" id="participant-id"></p>
     </section>
 
     <!-- VÁLASZTÁSI FELÜLET -->
-
-    <section
-
-      id="answer-section"
-
-      class="answer-section"
-
-      hidden
-
-    >
-
+    <section id="answer-section" class="answer-section" hidden>
       <h2>Válaszd ki a válaszodat!</h2>
 
       <p class="answer-description">
-
         Az alábbi lehetőségek közül egyet választhatsz.
-
         A választásodat a beküldés előtt módosíthatod.
-
       </p>
 
       <div class="answer-list">
-
         <label class="answer-option">
-
           <input type="radio" name="answer" value="1">
-
           <span>1. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="2">
-
           <span>2. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="3">
-
           <span>3. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="4">
-
           <span>4. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="5">
-
           <span>5. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="6">
-
           <span>6. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="7">
-
           <span>7. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="8">
-
           <span>8. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="9">
-
           <span>9. lehetőség</span>
-
         </label>
 
         <label class="answer-option">
-
           <input type="radio" name="answer" value="10">
-
           <span>10. lehetőség</span>
-
         </label>
-
       </div>
 
-      <button
-
-        id="submit-answer"
-
-        type="button"
-
-        disabled
-
-      >
-
+      <button id="submit-answer" type="button" disabled>
         Beküldés
-
       </button>
 
       <p
-
         id="answer-status"
-
         role="status"
-
         aria-live="polite"
-
       ></p>
-
     </section>
 
     <div class="footer">
-
       Oktatási válaszgyűjtő
-
     </div>
-
   </main>
 
   <script>
@@ -623,7 +355,8 @@
     // 2. POWER AUTOMATE KAPCSOLAT
     // ==========================================
 
-    const JOIN_FLOW_URL = "https\://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/bc632f8941994a4d8a36e132608ad525/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eV21QLRekGuBjrdH0KPjDHf-SvXqfTTK7rL_uxKemNk";
+    const JOIN_FLOW_URL =
+      "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/bc632f8941994a4d8a36e132608ad525/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eV21QLRekGuBjrdH0KPjDHf-SvXqfTTK7rL_uxKemNk";
 
     // ==========================================
     // 3. MUNKAMENET AZONOSÍTÓ KIOLVASÁSA
@@ -652,11 +385,13 @@
         const newParticipantId = crypto.randomUUID();
         localStorage.setItem(storageKey, newParticipantId);
         return newParticipantId;
+
       } catch (error) {
-        // Ha a böngésző tiltja a localStorage használatát,
-        // a csatlakozás továbbra is működhet, de frissítés után
-        // az azonosító megőrzése nem garantálható.
-        console.error("A résztvevői azonosító nem menthető a böngészőben:", error);
+        console.error(
+          "A résztvevői azonosító nem menthető a böngészőben:",
+          error
+        );
+
         return crypto.randomUUID();
       }
     }
@@ -667,13 +402,18 @@
 
     if (!sessionId || !sessionId.trim()) {
       sessionIdElement.textContent = "Nincs megadva";
+
       statusElement.textContent =
         "Érvénytelen hivatkozás. A munkamenet azonosítója hiányzik.";
+
       statusElement.classList.add("error");
+
     } else {
       sessionIdElement.textContent = sessionId;
+
       statusElement.textContent =
         "A munkamenet azonosítóját sikeresen beolvastuk. A csatlakozáshoz nyomd meg az alábbi gombot.";
+
       statusElement.classList.add("success");
       joinButton.hidden = false;
     }
@@ -687,29 +427,34 @@
         return;
       }
 
-      if (!JOIN_FLOW_URL || JOIN_FLOW_URL.includes("IDE_MASOLD")) {
+      if (
+        !JOIN_FLOW_URL ||
+        JOIN_FLOW_URL.includes("IDE_MASOLD")
+      ) {
         statusElement.textContent =
           "A Power Automate kapcsolat URL-je nincs beállítva.";
+
         statusElement.classList.add("error");
         return;
       }
 
       joinButton.disabled = true;
+
       statusElement.classList.remove("error");
       statusElement.classList.remove("success");
       statusElement.textContent = "Csatlakozás folyamatban...";
 
       try {
-        // Első csatlakozáskor új azonosítót hoz létre,
-        // frissítés vagy újrapróbálkozás esetén a mentettet használja.
         const participantId = getOrCreateParticipantId(sessionId);
         currentParticipantId = participantId;
 
         const response = await fetch(JOIN_FLOW_URL, {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json"
           },
+
           body: JSON.stringify({
             SessionId: sessionId,
             ParticipantId: participantId
@@ -722,7 +467,9 @@
         try {
           result = JSON.parse(responseText);
         } catch {
-          throw new Error("A Power Automate nem JSON választ küldött.");
+          throw new Error(
+            "A Power Automate nem JSON választ küldött."
+          );
         }
 
         if (!response.ok) {
@@ -735,7 +482,8 @@
           result.participantNumber === null
         ) {
           throw new Error(
-            result.message || "Nem érkezett vissza résztvevői sorszám."
+            result.message ||
+            "Nem érkezett vissza résztvevői sorszám."
           );
         }
 
@@ -743,12 +491,15 @@
         // 6. SIKERES CSATLAKOZÁS
         // ======================================
 
-        participantIdElement.textContent = result.participantNumber;
+        participantIdElement.textContent =
+          result.participantNumber;
+
         participantSection.hidden = false;
         answerSection.hidden = false;
 
         statusElement.textContent =
           "Sikeres csatlakozás! A résztvevői azonosítót hozzárendeltük a munkamenethez.";
+
         statusElement.classList.add("success");
 
         joinButton.textContent = "Sikeresen csatlakoztál";
@@ -757,12 +508,11 @@
       } catch (error) {
         console.error("Csatlakozási hiba:", error);
 
-        // A localStorage-ban tárolt azonosítót szándékosan
-        // nem töröljük: újrapróbálkozáskor ugyanazt küldjük.
         currentParticipantId = null;
 
         statusElement.textContent =
           "A csatlakozás nem sikerült: " + error.message;
+
         statusElement.classList.remove("success");
         statusElement.classList.add("error");
 
@@ -798,7 +548,9 @@
       }
 
       if (!currentParticipantId) {
-        answerStatus.textContent = "Érvénytelen résztvevői azonosító.";
+        answerStatus.textContent =
+          "Érvénytelen résztvevői azonosító.";
+
         answerStatus.classList.add("error");
         return;
       }
@@ -811,7 +563,5 @@
       answerStatus.classList.remove("success");
     });
   </script>
-
 </body>
-
 </html>
