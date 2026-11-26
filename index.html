@@ -46,6 +46,22 @@
         >
       </div>
 
+      <div class="field-group">
+        <label for="question-set">
+          Kérdésverzió
+        </label>
+
+        <select
+          id="question-set"
+          name="question-set"
+          required
+        >
+          <option value="">Válassz kérdésverziót</option>
+          <option value="A">A verzió – Élet és értékek</option>
+          <option value="B">B verzió – Munka és motiváció</option>
+        </select>
+      </div>
+
       <button id="submit-button" type="submit">
         Menet indítása
       </button>
@@ -141,6 +157,9 @@
     const limitInput =
       document.getElementById("max-participants");
 
+    const questionSetInput =
+      document.getElementById("question-set");
+
     const status =
       document.getElementById("status");
 
@@ -171,19 +190,10 @@
     // ==========================================
 
     const FLOW_URL =
-      "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/4f070c0cbcef4f7c9cf60db3ca947fc5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H5y0K4xy46XtHGPM8gdGuGEFhuei-MVyaMBVpU_U4Zg";
+      "IDE_MASOLD_BE_AZ_UJ_MUNKAMENET_FLOW_URL";
 
     const STATUS_FLOW_URL =
-    "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/13/workflows/e853d1d6cd8c44298c198e1afae05b33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TCmI2fbgXyvdqblGzbHNCZhtOicx7rCqa5O20dLYnaQ"
-    
-    // ==========================================
-    // 3. RÉSZTVEVŐI OLDAL URL-JE
-    // ==========================================
-
-    const FORM_URL =
-      new URL("./form.html", window.location.href).href;
-
-    let currentFormUrl = "";
+    "IDE_MASOLD_BE_AZ_UJ_STATUS_FLOW_URL";
 
 
     // ==========================================
@@ -267,6 +277,7 @@ async function updateSessionStatus(sessionId) {
       event.preventDefault();
 
       const sessionName = nameInput.value.trim();
+      const questionSet = questionSetInput.value;
 
       if (!sessionName) {
 
@@ -278,6 +289,13 @@ async function updateSessionStatus(sessionId) {
         return;
       }
 
+
+      if (questionSet !== "A" && questionSet !== "B") {
+        status.textContent =
+          "Kérlek, válaszd ki az A vagy B kérdésverziót!";
+        questionSetInput.focus();
+        return;
+      }
 
       // Létszám ellenőrzése
 
@@ -322,7 +340,9 @@ async function updateSessionStatus(sessionId) {
 
             sessionName: sessionName,
 
-            maxParticipants: maxParticipants
+            maxParticipants: maxParticipants,
+
+            questionSet: questionSet
 
           })
 
@@ -381,7 +401,15 @@ async function updateSessionStatus(sessionId) {
           result.sessionId
         );
 
+        url.searchParams.set(
+          "questionSet",
+          questionSet
+        );
+
         currentFormUrl = url.href;
+
+        // A kiválasztott verzió a létrejött munkamenethez kötődik.
+        questionSetInput.disabled = true;
         // Korábbi lekérdezés leállítása
 if (statusPollingInterval) {
   clearInterval(statusPollingInterval);
