@@ -193,7 +193,17 @@
       "IDE_MASOLD_BE_AZ_UJ_MUNKAMENET_FLOW_URL";
 
     const STATUS_FLOW_URL =
-    "IDE_MASOLD_BE_AZ_UJ_STATUS_FLOW_URL";
+      "IDE_MASOLD_BE_AZ_UJ_STATUS_FLOW_URL";
+
+
+    // ==========================================
+    // 3. RÉSZTVEVŐI OLDAL URL-JE
+    // ==========================================
+
+    const FORM_URL =
+      new URL("./form.html", window.location.href).href;
+
+    let currentFormUrl = "";
 
 
     // ==========================================
@@ -307,10 +317,13 @@ async function updateSessionStatus(sessionId) {
       }
 
 
-      if (!FLOW_URL) {
+      if (
+        !FLOW_URL ||
+        FLOW_URL.includes("IDE_MASOLD_BE")
+      ) {
 
         status.textContent =
-          "A Power Automate adatkapcsolat még nincs beállítva.";
+          "A munkamenet-létrehozó Power Automate-végpont még nincs beállítva.";
 
         return;
       }
@@ -349,7 +362,16 @@ async function updateSessionStatus(sessionId) {
         });
 
 
-        const result = await response.json();
+        const responseText = await response.text();
+        let result;
+
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            "A Power Automate nem JSON választ küldött."
+          );
+        }
 
 
         if (!response.ok) {
@@ -379,7 +401,8 @@ async function updateSessionStatus(sessionId) {
         // ======================================
 
         resultName.textContent =
-          result.sessionName || sessionName;
+          (result.sessionName || sessionName) +
+          " – " + questionSet + " verzió";
 
 
         // Kezdeti létszámadatok
