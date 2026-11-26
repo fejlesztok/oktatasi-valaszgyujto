@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oktatási válaszgyűjtő</title>
+  <link rel="stylesheet" href="./design.css">
+</head>
+
+<body>
+  <main>
+
+    <!-- MUNKAMENET LÉTREHOZÁSA -->
+
+    <form id="session-form">
+
+      <div class="field-group">
+        <label for="session-name">
+          Munkamenet neve
+        </label>
+
+        <input
+          id="session-name"
+          name="session-name"
+          type="text"
+          placeholder="Például: Rafi"
+          required
+        >
+      </div>
+
+      <div class="field-group">
+        <label for="max-participants">
+          Résztvevők maximális száma
+        </label>
+
+        <input
+          id="max-participants"
+          name="max-participants"
+          type="number"
+          min="1"
+          max="40"
+          step="1"
+          placeholder="Minimum 1, maximum 40 fő"
+          required
+        >
+      </div>
+
+      <div class="field-group">
+        <label for="question-set">
+          Kérdésverzió
+        </label>
+
+        <select
+          id="question-set"
+          name="question-set"
+          required
+        >
+          <option value="">Válassz kérdésverziót</option>
+          <option value="A">A verzió – Élet és értékek</option>
+          <option value="B">B verzió – Munka és motiváció</option>
+        </select>
+      </div>
+
+      <button id="submit-button" type="submit">
+        Menet indítása
+      </button>
+
+    </form>
+
+
+    <!-- ÁLLAPOTÜZENET -->
+
+    <p id="status" role="status" aria-live="polite"></p>
+
+
+    <!-- SIKERES MUNKAMENET UTÁNI KÉPERNYŐ -->
+
+    <section id="result" class="result" hidden>
+
+      <h2>Olvassátok be az alábbi QR kódot!</h2>
+
+      <div class="session-dashboard">
+
+        <!-- QR-KÓD HELYE -->
+
+        <div class="qr-placeholder">
+          <span>QR-kód helye</span>
+        </div>
+
+
+        <!-- MUNKAMENET ADATAI -->
+
+        <div class="session-info">
+
+          <h3 id="result-name"></h3>
+
+          <!-- RÉSZTVEVŐI LÉTSZÁM -->
+
+          <div class="participant-stats">
+
+            <div class="stat-box">
+              <strong id="joined-count">0</strong>
+              <span>csatlakozott résztvevő</span>
+            </div>
+
+            <div class="stat-box">
+              <strong id="remaining-count">0</strong>
+              <span>hátralévő hely</span>
+            </div>
+
+          </div>
+
+
+          <!-- MUNKATERÜLET GOMB -->
+
+          <button
+            type="button"
+            id="workspace-button"
+            class="workspace-button"
+          >
+            Belépés a munkaterületre
+          </button>
+
+
+          <!-- RÉSZTVEVŐI OLDAL MEGNYITÁSA -->
+
+          <button
+            type="button"
+            id="form-open-button"
+            class="form-open-button"
+          >
+            Résztvevői oldal megnyitása
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script>
+
+    // ==========================================
+    // 1. HTML ELEMEK
+    // ==========================================
+
+    const form =
+      document.getElementById("session-form");
+
+    const nameInput =
+      document.getElementById("session-name");
+
+    const limitInput =
+      document.getElementById("max-participants");
+
+    const questionSetInput =
+      document.getElementById("question-set");
+
+    const status =
+      document.getElementById("status");
+
+    const submitButton =
+      document.getElementById("submit-button");
+
+    const resultSection =
+      document.getElementById("result");
+
+    const resultName =
+      document.getElementById("result-name");
+
+    const joinedCount =
+      document.getElementById("joined-count");
+
+    const remainingCount =
+      document.getElementById("remaining-count");
+
+    const workspaceButton =
+      document.getElementById("workspace-button");
+
+    const formOpenButton =
+      document.getElementById("form-open-button");
+
+
+    // ==========================================
+    // 2. POWER AUTOMATE KAPCSOLAT
+    // ==========================================
+
+    const FLOW_URL =
+      "IDE_MASOLD_BE_AZ_UJ_MUNKAMENET_FLOW_URL";
+
+    const STATUS_FLOW_URL =
+    "IDE_MASOLD_BE_AZ_UJ_STATUS_FLOW_URL";
+
+
+    // ==========================================
+    // 4. LÉTSZÁM ELLENŐRZÉSE
+    // ==========================================
+
+    function validateParticipantLimit() {
+
+      const maxParticipants = limitInput.valueAsNumber;
+
+      if (
+        !Number.isInteger(maxParticipants) ||
+        maxParticipants < 1 ||
+        maxParticipants > 40
+      ) {
+
+        status.textContent =
+          "A résztvevők száma 1 és 40 közötti egész szám lehet.";
+
+        limitInput.focus();
+
+        return null;
+      }
+
+      return maxParticipants;
+    }
+
+// ==========================================
+// 4/A. MUNKAMENET ÁLLAPOTÁNAK LEKÉRDEZÉSE
+// ==========================================
+
+let statusPollingInterval = null;
+
+async function updateSessionStatus(sessionId) {
+
+  try {
+
+    const response = await fetch(STATUS_FLOW_URL, {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        sessionId: sessionId
+      })
+
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP-hiba: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    joinedCount.textContent = data.joinedParticipants;
+    remainingCount.textContent = data.remainingPlaces;
+
+    if (data.isFull === true) {
+
+      clearInterval(statusPollingInterval);
+      status.textContent = "A munkamenet megtelt!";
+
+    }
+
+  } catch (error) {
+
+    console.error("Állapotlekérdezési hiba:", error);
+
+  }
+
+}
+    // ==========================================
+    // 5. MUNKAMENET LÉTREHOZÁSA
+    // ==========================================
+
+    form.addEventListener("submit", async (event) => {
+
+      event.preventDefault();
+
+      const sessionName = nameInput.value.trim();
+      const questionSet = questionSetInput.value;
+
+      if (!sessionName) {
+
+        status.textContent =
+          "Kérlek, add meg a munkamenet nevét!";
+
+        nameInput.focus();
+
+        return;
+      }
+
+
+      if (questionSet !== "A" && questionSet !== "B") {
+        status.textContent =
+          "Kérlek, válaszd ki az A vagy B kérdésverziót!";
+        questionSetInput.focus();
+        return;
+      }
+
+      // Létszám ellenőrzése
+
+      const maxParticipants =
+        validateParticipantLimit();
+
+      if (maxParticipants === null) {
+        return;
+      }
+
+
+      if (!FLOW_URL) {
+
+        status.textContent =
+          "A Power Automate adatkapcsolat még nincs beállítva.";
+
+        return;
+      }
+
+
+      submitButton.disabled = true;
+
+      resultSection.hidden = true;
+
+      currentFormUrl = "";
+
+      status.textContent =
+        "Munkamenet létrehozása folyamatban...";
+
+
+      try {
+
+        const response = await fetch(FLOW_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            sessionName: sessionName,
+
+            maxParticipants: maxParticipants,
+
+            questionSet: questionSet
+
+          })
+
+        });
+
+
+        const result = await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP-hiba: ${response.status}`
+          );
+
+        }
+
+
+        if (
+          result.success !== true ||
+          !result.sessionId
+        ) {
+
+          throw new Error(
+            result.message ||
+            "Nem érkezett vissza munkamenet-azonosító."
+          );
+
+        }
+
+
+        // ======================================
+        // 6. MUNKAMENET ADATAINAK MEGJELENÍTÉSE
+        // ======================================
+
+        resultName.textContent =
+          result.sessionName || sessionName;
+
+
+        // Kezdeti létszámadatok
+
+        joinedCount.textContent = "0";
+
+        remainingCount.textContent =
+          maxParticipants;
+
+
+        // ======================================
+        // 7. RÉSZTVEVŐI HIVATKOZÁS ELŐÁLLÍTÁSA
+        // ======================================
+
+        const url = new URL(FORM_URL);
+
+        url.searchParams.set(
+          "sessionId",
+          result.sessionId
+        );
+
+        url.searchParams.set(
+          "questionSet",
+          questionSet
+        );
+
+        currentFormUrl = url.href;
+
+        // A kiválasztott verzió a létrejött munkamenethez kötődik.
+        questionSetInput.disabled = true;
+        // Korábbi lekérdezés leállítása
+if (statusPollingInterval) {
+  clearInterval(statusPollingInterval);
+}
+
+// Az aktuális munkamenet azonosítója
+const currentSessionId = result.sessionId;
+
+// Az első lekérdezés azonnal elindul
+updateSessionStatus(currentSessionId);
+
+// Automatikus frissítés 3 másodpercenként
+statusPollingInterval = setInterval(() => {
+  updateSessionStatus(currentSessionId);
+}, 3000);
+
+
+        // ======================================
+        // 8. EREDMÉNYKÉPERNYŐ MEGJELENÍTÉSE
+        // ======================================
+
+        resultSection.hidden = false;
+
+        status.textContent =
+          "A munkamenet sikeresen létrejött!";
+
+      } catch (error) {
+
+        console.error(
+          "Munkamenet létrehozási hiba:",
+          error
+        );
+
+        status.textContent =
+          "Nem sikerült befejezni a kérést. " +
+          "Ellenőrizd a Power Automate futási előzményeit " +
+          "és a böngésző konzolját.";
+
+      } finally {
+
+        submitButton.disabled = false;
+
+      }
+
+    });
+
+
+    // ==========================================
+    // 9. RÉSZTVEVŐI OLDAL MEGNYITÁSA
+    // ==========================================
+
+    formOpenButton.addEventListener("click", () => {
+
+      if (!currentFormUrl) {
+        return;
+      }
+
+      window.open(
+        currentFormUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+    });
+
+
+    // ==========================================
+    // 10. MUNKATERÜLET MEGNYITÁSA
+    // ==========================================
+
+    workspaceButton.addEventListener("click", () => {
+
+      status.textContent =
+        "A munkaterület megnyitása a következő fejlesztési lépésben lesz elérhető.";
+
+    });
+
+  </script>
+
+</body>
+</html>
