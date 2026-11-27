@@ -835,26 +835,120 @@
       answerStatus.classList.remove("success", "error");
     });
 
+   
     // ==========================================
-    // 9. BEKÜLDÉS – JELENLEG CSAK FELÜLETI FUNKCIÓ
+    // 9. VÁLASZBEKÜLDÉS – POWER AUTOMATE
     // ==========================================
 
-    submitAnswerButton.addEventListener("click", () => {
+    // A Power Automate válaszbeküldési végpontja.
+    // A helyőrzőt cseréld ki a saját HTTP POST URL-edre.
+    const ANSWER_FLOW_URL =
+      "https://default003fcf5734804f89ac3a530d8d046c.be.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/16/workflows/ea224178c4da472c95b17b2c46a798bf/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=6NOI4AkpOl-aN-mwyGyCKQk4XLaaqM4YgxGCTt0T_XI";
+
+    submitAnswerButton.addEventListener("click", async () => {
       const selectedAnswers = Array.from(
         answerList.querySelectorAll('input[name="answer"]:checked')
       ).map((input) => input.value);
 
-      if (selectedAnswers.length !== 6 || new Set(selectedAnswers).size !== 6) return;
-
-      if (!currentParticipantId) {
-        answerStatus.textContent = "Érvénytelen résztvevői azonosító.";
+      // Hat különböző válasz ellenőrzése
+      if (
+        selectedAnswers.length !== 6 ||
+        new Set(selectedAnswers).size !== 6
+      ) {
+        answerStatus.textContent =
+          "Pontosan hat különböző kategóriát kell kiválasztanod.";
         answerStatus.classList.add("error");
         return;
       }
 
+      // Résztvevő azonosítójának ellenőrzése
+      if (!currentParticipantId) {
+        answerStatus.textContent =
+          "Érvénytelen résztvevői azonosító.";
+        answerStatus.classList.add("error");
+        return;
+      }
+
+      // HTTP-végpont ellenőrzése
+      if (
+        !ANSWER_FLOW_URL ||
+        ANSWER_FLOW_URL.includes("IDE_MASOLD")
+      ) {
+        answerStatus.textContent =
+          "A válaszbeküldési kapcsolat URL-je nincs beállítva.";
+        answerStatus.classList.add("error");
+        return;
+      }
+
+      submitAnswerButton.disabled = true;
+
       answerStatus.textContent =
-        "A hat választás rögzítve van ezen a felületen. A tényleges adatbeküldés még nincs bekötve.";
-      answerStatus.classList.remove("error", "success");
+        "Válaszok beküldése folyamatban...";
+
+      answerStatus.classList.remove("success", "error");
+
+      try {
+        const response = await fetch(ANSWER_FLOW_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            SessionId: sessionId,
+            ParticipantId: currentParticipantId,
+            InitialWords: selectedAnswers
+          })
+        });
+
+        const responseText = await response.text();
+
+        let result;
+
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            "A Power Automate nem JSON választ küldött."
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || `HTTP-hiba: ${response.status}`
+          );
+        }
+
+        if (
+          result.success !== true ||
+          result.participantValidated !== true
+        ) {
+          throw new Error(
+            result.message ||
+            "A résztvevő azonosítása nem sikerült."
+          );
+        }
+
+        // Sikeres résztvevő-azonosítás
+        answerStatus.textContent =
+          "A résztvevő azonosítása sikeres. A hat választás megérkezett a Power Automate folyamatba.";
+
+        answerStatus.classList.remove("error");
+        answerStatus.classList.add("success");
+
+        // A gomb letiltva marad, hogy ne induljon újabb beküldés.
+
+      } catch (error) {
+        console.error("Válaszbeküldési hiba:", error);
+
+        answerStatus.textContent =
+          "A beküldés nem sikerült: " + error.message;
+
+        answerStatus.classList.remove("success");
+        answerStatus.classList.add("error");
+
+        // Hiba esetén újra próbálkozhat a résztvevő.
+        submitAnswerButton.disabled = false;
+      }
     });
 
 </script>
